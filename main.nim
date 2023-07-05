@@ -3,8 +3,7 @@ import std/parseopt
 import std/parseutils
 
 import lib/client
-
-var nimircVersion = "0.1.0"
+import lib/info
 
 proc usage() =
   echo "Usage: nimirc [options]"
@@ -46,7 +45,7 @@ for kind, key, val in opts.getopt():
       usage()
       quit(0)
     of "version", "v":
-      echo nimircVersion
+      echo version
       quit(0)
 
 var errors: seq[string] = @[]
@@ -54,7 +53,7 @@ var errors: seq[string] = @[]
 if server == "": errors.add("Server not specified")
 if nick == "": errors.add("Nickname not specified")
 
-if len(errors) > 0
+if len(errors) > 0:
   for err in errors:
     echo err
   quit(1)

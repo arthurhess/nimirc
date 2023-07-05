@@ -2,6 +2,8 @@ import std/net
 import std/re
 import strutils
 
+import ../info
+
 proc call*(socket: Socket, message: string) =
   var matches: array[3, string]
 
@@ -14,4 +16,4 @@ proc call*(socket: Socket, message: string) =
   if (command == "PRIVMSG" and message.split(" ")[1] == ":\1VERSION\1"):
     let nick = msgFrom.split("!")[0]
 
-    socket.send("NOTICE " & nick & " :\1VERSION Arthur on Nim\1\r\n")
+    socket.send("NOTICE " & nick & " :\1VERSION Arthur on Nim (" & version & ")\1\r\n")

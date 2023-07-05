@@ -1,4 +1,4 @@
-build/nimirc: main.nim
+build/nimirc: main.nim lib/**/*.nim
 	nim compile -o:build/nimirc main.nim
 
 install: build/nimirc
