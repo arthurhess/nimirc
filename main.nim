@@ -1,26 +1,70 @@
-import std/net
+import std/os
+import std/parseopt
+import std/parseutils
 
-import lib/eventbus
-import lib/modules/autojoin
-import lib/modules/ctcpversion
-import lib/modules/pingpong
+import lib/client
 
-let socket = newSocket()
-socket.connect("irc.brasirc.com.br", Port(6667))
+var nimircVersion = "0.1.0"
 
-socket.send("NICK Arthur`nim\r\n")
-socket.send("USER arthur 0 * :Arthur on Nim\r\n")
+proc usage() =
+  echo "Usage: nimirc [options]"
+  echo ""
+  echo "Options:"
+  echo "  -s, --server   Server to connect to"
+  echo "  -p, --port     Port to connect to (default: 6667)"
+  echo "  -n, --nick     Nickname to use"
+  echo "  -u, --user     Username to use (default: nimirc)"
+  echo "  -r, --realname Realname to use (default: Nimirc)"
+  echo "  -h, --help     Show this help message and exit"
+  echo "  -v, --version  Show version number and exit"
 
-let bus = EventBus()
+var server : string
+var port = 6667
+var nick : string
+var user = "nimirc"
+var realname = "Nimirc"
 
-bus.subscribe("message", proc (msg: string) = autojoin.call(socket, msg))
-bus.subscribe("message", proc (msg: string) = ctcpversion.call(socket, msg))
-bus.subscribe("message", proc (msg: string) = pingpong.call(socket, msg))
+var opts = initOptParser(quoteShellCommand(commandLineParams()))
 
-var line = ""
+for kind, key, val in opts.getopt():
+  case kind
+  of cmdEnd: break
+  of cmdArgument: continue
+  of cmdLongOption, cmdShortOption:
+    case key
+    of "server", "s":
+      server = val
+    of "port", "p":
+      discard parseInt(val, port)
+    of "nick", "n":
+      nick = val
+    of "user", "u":
+      user = val
+    of "realname", "r":
+      realname = val
+    of "help", "h":
+      usage()
+      quit(0)
+    of "version", "v":
+      echo nimircVersion
+      quit(0)
 
-while true:
-  socket.readLine(line)
-  echo line
+var errors: seq[string] = @[]
 
-  bus.emit("message", line)
+if server == "": errors.add("Server not specified")
+if nick == "": errors.add("Nickname not specified")
+
+if len(errors) > 0
+  for err in errors:
+    echo err
+  quit(1)
+
+var nimirc = newClient(
+  server=server,
+  port=port,
+  nick=nick,
+  user=user,
+  realname=realname
+)
+
+nimirc.start()
